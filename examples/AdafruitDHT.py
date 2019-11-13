@@ -1,14 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Copyright (c) 2014 Adafruit Industries
-# Author: Tony DiCola
-
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 
@@ -22,9 +19,36 @@
 import sys
 import time
 import Adafruit_DHT
+import http.client as http
+import urllib
+import json
 
+#MCS client
+
+deviceid = "D1ipFZDJ"
+
+deviceKey = "4S9xNs7oLLX5x9lW"
+
+def post_to_mcs(payload):
+	headers = {"Content-type":"application/json","deviceKey":deviceKey}
+	not_connected = 1
+	while(not_connected):
+		try:
+			conn = http.HTTPConnection("api.mediatek.com:80")
+			conn.connect()
+			not_connected = 0
+		except(http.HTTPException) as ex:
+			print("Error:%s"%ex)
+			time.sleep(10)
+	conn.request("POST","/mcs/v2/devices/"+deviceid+"/datapoints",json.dumps(payload),headers)
+
+	response = conn.getresponse()
+	print(response.status,response.reason,json.dumps(payload),time.strftime("%c"))
+	data = response.read()
+	conn.close()	
 
 # Parse command line parameters.
+
 sensor_args = { '11': Adafruit_DHT.DHT11,
                 '22': Adafruit_DHT.DHT22,
                 '2302': Adafruit_DHT.AM2302 }
@@ -41,18 +65,16 @@ else:
 
 humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
 
-# Un-comment the line below to convert the temperature to Fahrenheit.
-# temperature = temperature * 9/5.0 + 32
-
-# Note that sometimes you won't get a reading and
-# the results will be null (because Linux can't
-# guarantee the timing of calls to read the sensor).
-# If this happens try again!
 while True:
 	h0,t0 = Adafruit_DHT.read_retry(sensor,pin)
+
 	if h0 is not None and t0 is not None:
-		 print('Temp={0:0.1f}*  Humidity={1:0.1f}%'.format(t0, h0))
+		print('Temp={0:0.1f}*  Humidity={1:0.1f}%'.format(t0, h0))
+		
+		payload = {"datapoints":[{"dataChnId":"Humidity","values":{"value":h0}},{"dataChnId":"Temperature","values":{"value":t0}}]} 
+
+		post_to_mcs(payload)
 	else:
 		 print('Failed to get reading. Try again')
 		 sys.exit(1)
-	time.sleep(0.2)
+	
