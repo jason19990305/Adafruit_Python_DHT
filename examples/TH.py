@@ -25,9 +25,9 @@ import json
 
 #MCS client
 
-deviceid = "DZLjsNdR"
+deviceid = "D1ipFZDJ"
 
-deviceKey = "2pQbxij3FPRW3VVM"
+deviceKey = "4S9xNs7oLLX5x9lW"
 
 def post_to_mcs(payload):
 	headers = {"Content-type":"application/json","deviceKey":deviceKey}
@@ -71,11 +71,10 @@ while True:
 	if h0 is not None and t0 is not None:
 		print('Temp={0:0.1f}*  Humidity={1:0.1f}%'.format(t0, h0))
 		
-		#payload = {"datapoints":[{"dataChnId":"Humidity","values":{"value":h0}},{"dataChnId":"Temperature","values":{"value":t0}}]} 
+		payload = {"datapoints":[{"dataChnId":"Humidity","values":{"value":h0}},{"dataChnId":"Temperature","values":{"value":t0}}]} 
 
-		#post_to_mcs(payload)
+		post_to_mcs(payload)
 	else:
 		 print('Failed to get reading. Try again')
 		 sys.exit(1)
 	
-	time.sleep(1)
